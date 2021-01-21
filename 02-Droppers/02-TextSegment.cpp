@@ -76,6 +76,12 @@ if (vp == 0){
 } else {
     printf("\nvirtual protect g2g\n");
 
+printf("%-20s : 0x%-016p\n", "payload addr", (void *)buf);
+printf("%-20s : 0x%-016p\n", "exec_mem addr", (void *)exec_payload);
+
+printf("\nDebug Breakpoint!\n");
+getchar();    
+
     new_thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE) exec_payload, 0,0,0);
     if (new_thread == NULL){
         printf("\nCreateThread failed :/ \n");
