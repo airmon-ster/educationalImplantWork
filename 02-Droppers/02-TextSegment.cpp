@@ -9,6 +9,11 @@ https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processt
 https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
 
 
+@ECHO OFF
+
+cl.exe /nologo /Ox /MT /W0 /GS- /DNDEBUG /Tcnewimplant.cpp /link /OUT:newimplant.exe /SUBSYSTEM:CONSOLE /MACHINE:x64
+
+
 */
 #include <windows.h>
 #include <stdio.h>
