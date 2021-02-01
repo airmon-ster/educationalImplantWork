@@ -5,6 +5,12 @@ https://docs.microsoft.com/en-us/windows/win32/dlls/dllmain
 https://stackoverflow.com/questions/2081409/what-does-apientry-do
 https://docs.microsoft.com/en-us/cpp/preprocessor/comment-c-cpp?view=msvc-160
 https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messageboxa
+
+@ECHO OFF
+
+cl.exe /D_USRDLL /D_WINDLL implantDLL.cpp /MT /link /DLL /OUT:implant.dll
+
+
 */
 
 #include <Windows.h>
