@@ -24,9 +24,6 @@ https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtua
 https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory
 https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread
 
-calc.exe kills target process, but provided messagebox does not
-
-
 
 
 msfvenom -p windows/x64/exec -a x64 CMD=calc.exe -f c --platform windows EXITFUNC=thread > cTransform.txt
@@ -169,9 +166,5 @@ if (pid){
         }
 
 }
-
-
-
-
 
 };
