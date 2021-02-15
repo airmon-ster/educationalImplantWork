@@ -1,0 +1,114 @@
+file pointer - location of an item in the file itself. position within the file as stored on disk
+RVA - address of item after being loaded into memory. offset of base address
+
+
+GetProcAddress
+winnt.h
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\winnt.h
+
+_IMAGE_DOS_HEADER
+LONG   e_lfanew; // File address of new exe header
+    _IMAGE_NT_HEADERS64
+        IMAGE_FILE_HEADER
+        IMAGE_OPTIONAL_HEADER64 OptionalHeader
+            typedef struct _IMAGE_DATA_DIRECTORY {
+                    DWORD   VirtualAddress;
+                    DWORD   Size;
+                } IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;
+
+                // Directory Entries
+
+                    #define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
+                    #define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
+                    #define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
+
+                    typedef struct _IMAGE_EXPORT_DIRECTORY {
+                                DWORD   Characteristics;
+                                DWORD   TimeDateStamp;
+                                WORD    MajorVersion;
+                                WORD    MinorVersion;
+                                DWORD   Name;
+                                DWORD   Base;
+                                DWORD   NumberOfFunctions;
+                                DWORD   NumberOfNames;
+                                DWORD   AddressOfFunctions;     // RVA from base of image
+                                DWORD   AddressOfNames;         // RVA from base of image
+                                DWORD   AddressOfNameOrdinals;  // RVA from base of image
+                            } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
+
+
+                typedef struct _IMAGE_IMPORT_DESCRIPTOR {
+                        union {
+                            DWORD   Characteristics;            // 0 for terminating null import descriptor
+                            DWORD   OriginalFirstThunk;         // RVA to original unbound IAT (PIMAGE_THUNK_DATA)
+                        } DUMMYUNIONNAME;
+                        DWORD   TimeDateStamp;                  // 0 if not bound,
+                                                                // -1 if bound, and real date\time stamp
+                                                                //     in IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT (new BIND)
+                                                                // O.W. date/time stamp of DLL bound to (Old BIND)
+
+                        DWORD   ForwarderChain;                 // -1 if no forwarders
+                        DWORD   Name;
+                        DWORD   FirstThunk;
+
+
+                After data directory you land in section headers
+
+                _IMAGE_SECTION_HEADER
+
+
+GetModuleHandle
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\winternl.h
+
+!peb
+dt _PEB
+r $peb
+dt _PEB @$peb
+r _PEB_LDR_DATA
+
+dt _LDR_DATA_TABLE_ENTRY
+dt _LDR_DATA_TABLE_ENTRY 0x2199ec12d50
+
+
+
+
+
+
+
+
+32 bit vs 64 bit
+    x64
+        GetModuleHandle
+            PEB @ offset gs 0x60
+                ldr @ offset 0x18
+                    InMemoryOrderModuleList @ offset 0x020
+                        1st - current process
+                        2nd - ntdll.dll
+                        3rd - kernel32.dll
+                            +0x030 DllBase
+        GetProcAddress
+            DllBase
+                PE header @ offset 3C = RVA 100
+                    100h + 78h = 178 = Export Directory RVA
+                        Export Dir RVA + 14h (20 dec) = NumberOfFunctions
+                        Export Dir RVA + 1ch ( dec) = AddressOfFunctions
+                        Export Dir RVA + 20h (20 dec) = AddressOfNames
+                        Export Dir RVA + 24h (20 dec) = AddressOfNameOrdinals
+    x86
+        GetModuleHandle
+            PEB @ offset fs 0x30
+                ldr @ offset 0x0c
+                    InMemoryOrderModuleList @ offset 0x14
+                        1st - current process
+                        2nd - ntdll.dll
+                        3rd - kernel32.dll
+                            0x18 - base address (tutorial said 0x10, but that doesnt appear to be correct)
+        GetProcAddress
+            DllBase
+                PE header @ offset 3C = RVA 80
+                    80h + 78h = F8 = Export Directory RVA
+                        Export Dir RVA + 14h (20 dec) = NumberOfFunctions
+                        Export Dir RVA + 1ch ( dec) = AddressOfFunctions
+                        Export Dir RVA + 20h (20 dec) = AddressOfNames
+                        Export Dir RVA + 24h (20 dec) = AddressOfNameOrdinals
+        
