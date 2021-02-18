@@ -92,8 +92,8 @@ dt _LDR_DATA_TABLE_ENTRY 0x2199ec12d50
                     100h + 78h = 178 = Export Directory RVA
                         Export Dir RVA + 14h (20 dec) = NumberOfFunctions
                         Export Dir RVA + 1ch ( dec) = AddressOfFunctions
-                        Export Dir RVA + 20h (20 dec) = AddressOfNames
-                        Export Dir RVA + 24h (20 dec) = AddressOfNameOrdinals
+                        Export Dir RVA + 20h ( dec) = AddressOfNames
+                        Export Dir RVA + 24h ( dec) = AddressOfNameOrdinals
     x86
         GetModuleHandle
             PEB @ offset fs 0x30
@@ -109,6 +109,6 @@ dt _LDR_DATA_TABLE_ENTRY 0x2199ec12d50
                     80h + 78h = F8 = Export Directory RVA
                         Export Dir RVA + 14h (20 dec) = NumberOfFunctions
                         Export Dir RVA + 1ch ( dec) = AddressOfFunctions
-                        Export Dir RVA + 20h (20 dec) = AddressOfNames
-                        Export Dir RVA + 24h (20 dec) = AddressOfNameOrdinals
+                        Export Dir RVA + 20h ( dec) = AddressOfNames
+                        Export Dir RVA + 24h ( dec) = AddressOfNameOrdinals
         
